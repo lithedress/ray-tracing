@@ -1,63 +1,52 @@
+use crate::hittable::{HitRecord, Hittable};
+use crate::material::Material;
+use crate::ray::*;
+use crate::vector::*;
 use num_traits::Float;
 use std::ops::Range;
 use std::rc::Rc;
-use crate::vector::*;
-use crate::ray::*;
 
-pub type Vector3<T> = Vector<T, 3>;
-
-impl<F: Float> Vector3<F> {
-    pub fn new() -> Self {
-        Vector::from_arr([F::zero(); 3])
-    }
-    pub fn cross(&self, other: &Self) -> Self {
-        Vector::from_arr([
-            self.0[1] * other.0[2] - self.0[2] - other.0[1],
-            self.0[2] * other.0[0] - self.0[0] - other.0[2],
-            self.0[0] * other.0[1] - self.0[1] - other.0[0],
-            ])
-    }
-}
+pub type Displacement3<F> = Displacement<F, 3>;
+pub type Position3<F> = Position<F, 3>;
+pub type Color3<F> = Color<F, 3>;
 
 pub type Ray3<F> = Ray<F, 3>;
 
-pub struct HitRecord<F: Float> {
-    pub p: Vector3<F>,
-    pub normal: Vector3<F>,
-    t: F,
-    front_face: bool,
+pub type HitRecord3<F> = HitRecord<F, 3>;
+
+impl<F: Float> Displacement3<F> {
+    #[allow(dead_code)]
+    pub fn cross(&self, other: &Self) -> Self {
+        Self::from_arr([
+            self.arr()[1] * other.arr()[2] - self.arr()[2] - other.arr()[1],
+            self.arr()[2] * other.arr()[0] - self.arr()[0] - other.arr()[2],
+            self.arr()[0] * other.arr()[1] - self.arr()[1] - other.arr()[0],
+        ])
+    }
 }
 
-impl<F: Float> HitRecord<F> {
-    fn new(p: Vector3<F>, t: F) -> Self { Self { p, normal: Vector3::new(), t, front_face: false } }
+pub struct Sphere<F: Float> {
+    center: Position3<F>,
+    radius: F,
 
-    fn set_face_normal(&mut self, ray: &Ray3<F>, outward_normal: &Vector3<F>) {
-        self.front_face = Vector::dot(&ray.direction, outward_normal) < F::zero();
-        self.normal = if self.front_face {
-            *outward_normal
-        } else {
-            -*outward_normal
+    material: Rc<dyn Material<F, 3>>,
+}
+
+impl<F: Float> Sphere<F> {
+    pub fn new(center: Position3<F>, radius: F, material: Rc<dyn Material<F, 3>>) -> Self {
+        Self {
+            center,
+            radius,
+            material,
         }
     }
 }
 
-pub trait Hittable<F: Float> {
-    fn hit_by(&self, ray: &Ray3<F>, t_range: Range<F>) -> Option<HitRecord<F>>;
-}
-
-pub struct Sphere<F: Float> {
-    center: Vector3<F>,
-    radius: F,
-}
-
-impl<F: Float> Sphere<F> {
-    pub fn new(center: Vector3<F>, radius: F) -> Self {
-        Self { center, radius }
-    }
-}
-
-impl<F> Hittable<F> for Sphere<F> where F: Float {
-    fn hit_by(&self, ray: &Ray3<F>, t_range: Range<F>) -> Option<HitRecord<F>> {
+impl<F> Hittable<F, 3> for Sphere<F>
+where
+    F: Float,
+{
+    fn hit_by(&self, ray: &Ray3<F>, t_range: Range<F>) -> Option<HitRecord3<F>> {
         let oc = ray.origin - self.center;
         let a = ray.direction.norm_pow2();
         let half_b = Vector::dot(&oc, &ray.direction);
@@ -79,29 +68,9 @@ impl<F> Hittable<F> for Sphere<F> where F: Float {
 
         let t = root;
         let p = ray.at(t);
-        let mut rec = HitRecord::new(p, t);
+        let mut rec = HitRecord3::new(p, t, &self.material);
         let outward_normal = (p - self.center) / self.radius;
         rec.set_face_normal(ray, &outward_normal);
         Some(rec)
-    }
-}
-
-pub struct HittableList<F: Float> {
-    pub objects: Vec<Rc<dyn Hittable<F>>>,
-}
-
-impl<F: Float> Hittable<F> for HittableList<F> {
-    fn hit_by(&self, ray: &Ray3<F>, t_range: Range<F>) -> Option<HitRecord<F>> {
-        let mut ans = None;
-        let mut closest_so_far = t_range.end;
-
-        for object in &self.objects {
-            if let Some(rec) = object.hit_by(ray, t_range.start..closest_so_far) {
-                closest_so_far = rec.t;
-                ans = Some(rec)
-            }
-        }
-
-        ans
     }
 }
