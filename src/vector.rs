@@ -1,13 +1,14 @@
 use num_traits::Float;
-use std::ops::{Add, Sub, Mul, Div, Index, Neg, AddAssign};
+use std::ops::{Add, Sub, Mul, Div, Neg, AddAssign};
 
 #[derive(Clone, Copy)]
-pub struct Vector<F: Float, const N: usize>([F; N]);
+pub struct Vector<F: Float, const N: usize>(pub [F; N]);
 
 impl<F: Float, const N: usize> Vector<F, N> {
     pub fn from_arr(arr: [F; N]) -> Self {
         Self(arr)
     }
+
     pub fn dot(&self, other: &Self) -> F {
         let mut ans = F::zero();
         for i in 0..N {
@@ -80,14 +81,6 @@ impl<F: Float, const N: usize> Div<F> for Vector<F, N> {
         Self(
             self.0.map(|t| t / other)
         )
-    }
-}
-
-impl<F: Float, const N: usize> Index<usize> for Vector<F, N> {
-    type Output = F;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.0[index]
     }
 }
 

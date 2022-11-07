@@ -12,9 +12,9 @@ impl<F: Float> Vector3<F> {
     }
     pub fn cross(&self, other: &Self) -> Self {
         Vector::from_arr([
-            self[1] * other[2] - self[2] - other[1],
-            self[2] * other[0] - self[0] - other[2],
-            self[0] * other[1] - self[1] - other[0],
+            self.0[1] * other.0[2] - self.0[2] - other.0[1],
+            self.0[2] * other.0[0] - self.0[0] - other.0[2],
+            self.0[0] * other.0[1] - self.0[1] - other.0[0],
             ])
     }
 }
@@ -22,7 +22,7 @@ impl<F: Float> Vector3<F> {
 pub type Ray3<F> = Ray<F, 3>;
 
 pub struct HitRecord<F: Float> {
-    p: Vector3<F>,
+    pub p: Vector3<F>,
     pub normal: Vector3<F>,
     t: F,
     front_face: bool,
