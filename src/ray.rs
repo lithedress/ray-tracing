@@ -1,5 +1,5 @@
-use num_traits::Float;
 use crate::vector::{Displacement, Position};
+use num_traits::Float;
 
 pub struct Ray<F: Float, const N: usize> {
     pub origin: Position<F, N>,

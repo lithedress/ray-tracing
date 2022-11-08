@@ -4,7 +4,7 @@ use crate::ray::*;
 use crate::vector::*;
 use num_traits::Float;
 use std::ops::Range;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub type Displacement3<F> = Displacement<F, 3>;
 pub type Position3<F> = Position<F, 3>;
@@ -29,11 +29,15 @@ pub struct Sphere<F: Float> {
     center: Position3<F>,
     radius: F,
 
-    material: Rc<dyn Material<F, 3>>,
+    material: Arc<dyn Material<F, 3> + Send + Sync>,
 }
 
 impl<F: Float> Sphere<F> {
-    pub fn new(center: Position3<F>, radius: F, material: Rc<dyn Material<F, 3>>) -> Self {
+    pub fn new(
+        center: Position3<F>,
+        radius: F,
+        material: Arc<dyn Material<F, 3> + Send + Sync>,
+    ) -> Self {
         Self {
             center,
             radius,

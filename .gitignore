@@ -11,4 +11,7 @@ Cargo.lock
 
 /.idea/
 
-output.png
+*.bmp
+*.png
+*.jpg
+*.jpeg

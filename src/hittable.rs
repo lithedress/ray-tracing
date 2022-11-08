@@ -3,22 +3,26 @@ use crate::ray::Ray;
 use crate::vector::{Displacement, Position, Vector};
 use num_traits::Float;
 use std::ops::Range;
-use std::rc::{Rc, Weak};
+use std::sync::{Arc, Weak};
 
 pub struct HitRecord<F: Float, const N: usize> {
     pub p: Position<F, N>,
     pub normal: Displacement<F, N>,
-    pub material: Weak<dyn Material<F, N>>,
+    pub material: Weak<dyn Material<F, N> + Send + Sync>,
     t: F,
     front_face: bool,
 }
 
 impl<F: Float, const N: usize> HitRecord<F, N> {
-    pub(crate) fn new(p: Position<F, N>, t: F, material: &Rc<dyn Material<F, N>>) -> Self {
+    pub(crate) fn new(
+        p: Position<F, N>,
+        t: F,
+        material: &Arc<dyn Material<F, N> + Send + Sync>,
+    ) -> Self {
         Self {
             p,
             normal: Displacement::new(),
-            material: Rc::downgrade(material),
+            material: Arc::downgrade(material),
             t,
             front_face: false,
         }
@@ -39,7 +43,7 @@ pub trait Hittable<F: Float, const N: usize> {
 }
 
 pub struct HittableList<F: Float, const N: usize> {
-    pub objects: Vec<Rc<dyn Hittable<F, N>>>,
+    pub objects: Vec<Arc<dyn Hittable<F, N> + Send + Sync>>,
 }
 
 impl<F: Float, const N: usize> Hittable<F, N> for HittableList<F, N> {
