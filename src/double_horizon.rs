@@ -1,8 +1,8 @@
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::solid_figures::{Color3, Displacement3, HitRecord3, Position3, Ray3};
-use rand::random;
 
+#[derive(Debug)]
 pub(crate) struct Camera {
     origin: Position3<f64>,
     lower_left_corner: Position3<f64>,
@@ -11,18 +11,26 @@ pub(crate) struct Camera {
 }
 
 impl Camera {
-    pub(crate) fn new() -> Self {
-        let viewport_height = 2.0;
-        let viewport_width = 16.0 / 9.0 * viewport_height;
-        let focal_length = 1.0;
+    pub(crate) fn new(
+        look_from: Position3<f64>,
+        look_at: Position3<f64>,
+        v_up: Displacement3<f64>,
+        v_f_o_f: f64,
+        aspect_ratio: f64,
+    ) -> Self {
+        let theta = v_f_o_f.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = h * 2.0;
+        let viewport_width = aspect_ratio * viewport_height;
 
-        let origin = Position3::new();
-        let horizontal = Displacement3::from_arr([viewport_width, 0.0, 0.0]);
-        let vertical = Displacement3::from_arr([0.0, viewport_height, 0.0]);
-        let lower_left_corner = origin
-            - horizontal / 2.0
-            - vertical / 2.0
-            - Displacement3::from_arr([0.0, 0.0, focal_length]);
+        let w = (look_from - look_at).unitize();
+        let u = Displacement3::cross(&v_up, &w).unitize();
+        let v = Displacement3::cross(&w, &u);
+
+        let origin = look_from;
+        let horizontal = u * viewport_width;
+        let vertical = v * viewport_height;
+        let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - w;
         Self {
             origin,
             horizontal,
@@ -31,10 +39,10 @@ impl Camera {
         }
     }
 
-    pub(crate) fn get_ray(&self, u: f64, v: f64) -> Ray3<f64> {
+    pub(crate) fn get_ray(&self, s: f64, t: f64) -> Ray3<f64> {
         Ray3::new(
             self.origin,
-            self.lower_left_corner + self.horizontal * u + self.vertical * v - self.origin,
+            self.lower_left_corner + self.horizontal * s + self.vertical * t - self.origin,
         )
     }
 }
@@ -76,7 +84,7 @@ impl Displacement3<f64> {
         let mut ans = Self::new();
         loop {
             for f in ans.arr_mut() {
-                *f = random();
+                *f = rand::random();
             }
             if ans.norm_pow2() < 1.0 {
                 return ans;
@@ -109,7 +117,7 @@ impl Lambertian {
     }
 }
 
-impl Material<f64, 3>  for Lambertian {
+impl Material<f64, 3> for Lambertian {
     fn scatter(
         &self,
         _r_in: &Ray3<f64>,
@@ -183,7 +191,7 @@ impl Material<f64, 3> for Dielectric {
 
         let cannot_refract = refraction_ratio * sin_theta > 1.0;
         let direction =
-            if cannot_refract || Dielectric::reflectance(cos_theta, refraction_ratio) > random() {
+            if cannot_refract || Dielectric::reflectance(cos_theta, refraction_ratio) > rand::random() {
                 unit_direction.reflect(&rec.normal)
             } else {
                 unit_direction.refract(&rec.normal, refraction_ratio)

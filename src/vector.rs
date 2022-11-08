@@ -1,7 +1,7 @@
 use num_traits::Float;
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub(crate) struct Vector<F: Float, const N: usize, const P: isize>([F; N]);
 pub(crate) type Displacement<F, const N: usize> = Vector<F, N, 0>;
 pub(crate) type Position<F, const N: usize> = Vector<F, N, 1>;

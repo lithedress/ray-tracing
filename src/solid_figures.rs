@@ -15,12 +15,11 @@ pub(crate) type Ray3<F> = Ray<F, 3>;
 pub(crate) type HitRecord3<F> = HitRecord<F, 3>;
 
 impl<F: Float> Displacement3<F> {
-    #[allow(dead_code)]
-    pub fn cross(&self, other: &Self) -> Self {
+    pub(crate) fn cross(&self, other: &Self) -> Self {
         Self::from_arr([
-            self.arr()[1] * other.arr()[2] - self.arr()[2] - other.arr()[1],
-            self.arr()[2] * other.arr()[0] - self.arr()[0] - other.arr()[2],
-            self.arr()[0] * other.arr()[1] - self.arr()[1] - other.arr()[0],
+            self.arr()[1] * other.arr()[2] - self.arr()[2] * other.arr()[1],
+            self.arr()[2] * other.arr()[0] - self.arr()[0] * other.arr()[2],
+            self.arr()[0] * other.arr()[1] - self.arr()[1] * other.arr()[0],
         ])
     }
 }
@@ -33,7 +32,7 @@ pub(crate) struct Sphere<F: Float> {
 }
 
 impl<F: Float> Sphere<F> {
-    pub fn new(
+    pub(crate) fn new(
         center: Position3<F>,
         radius: F,
         material: Arc<dyn Material<F, 3> + Send + Sync>,
