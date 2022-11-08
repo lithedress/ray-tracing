@@ -6,13 +6,13 @@ use num_traits::Float;
 use std::ops::Range;
 use std::sync::Arc;
 
-pub type Displacement3<F> = Displacement<F, 3>;
-pub type Position3<F> = Position<F, 3>;
-pub type Color3<F> = Color<F, 3>;
+pub(crate) type Displacement3<F> = Displacement<F, 3>;
+pub(crate) type Position3<F> = Position<F, 3>;
+pub(crate) type Color3<F> = Color<F, 3>;
 
-pub type Ray3<F> = Ray<F, 3>;
+pub(crate) type Ray3<F> = Ray<F, 3>;
 
-pub type HitRecord3<F> = HitRecord<F, 3>;
+pub(crate) type HitRecord3<F> = HitRecord<F, 3>;
 
 impl<F: Float> Displacement3<F> {
     #[allow(dead_code)]
@@ -25,7 +25,7 @@ impl<F: Float> Displacement3<F> {
     }
 }
 
-pub struct Sphere<F: Float> {
+pub(crate) struct Sphere<F: Float> {
     center: Position3<F>,
     radius: F,
 
@@ -53,7 +53,7 @@ where
     fn hit_by(&self, ray: &Ray3<F>, t_range: Range<F>) -> Option<HitRecord3<F>> {
         let oc = ray.origin - self.center;
         let a = ray.direction.norm_pow2();
-        let half_b = Vector::dot(&oc, &ray.direction);
+        let half_b = Displacement3::dot(&oc, &ray.direction);
         let c = oc.norm_pow2() - self.radius.powi(2);
 
         let half_discriminant = half_b.powi(2) - a * c;

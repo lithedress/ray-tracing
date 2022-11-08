@@ -2,27 +2,27 @@ use num_traits::Float;
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 #[derive(Clone, Copy)]
-pub struct Vector<F: Float, const N: usize, const P: isize>([F; N]);
-pub type Displacement<F, const N: usize> = Vector<F, N, 0>;
-pub type Position<F, const N: usize> = Vector<F, N, 1>;
-pub type Color<F, const N: usize> = Displacement<F, N>;
+pub(crate) struct Vector<F: Float, const N: usize, const P: isize>([F; N]);
+pub(crate) type Displacement<F, const N: usize> = Vector<F, N, 0>;
+pub(crate) type Position<F, const N: usize> = Vector<F, N, 1>;
+pub(crate) type Color<F, const N: usize> = Displacement<F, N>;
 
 impl<F: Float, const N: usize, const P: isize> Vector<F, N, P> {
-    pub fn from_arr(arr: [F; N]) -> Self {
+    pub(crate) fn from_arr(arr: [F; N]) -> Self {
         Vector(arr)
     }
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self::from_arr([F::zero(); N])
     }
-    pub fn arr(&self) -> &[F; N] {
+    pub(crate) fn arr(&self) -> &[F; N] {
         &self.0
     }
-    pub fn arr_mut(&mut self) -> &mut [F; N] {
+    pub(crate) fn arr_mut(&mut self) -> &mut [F; N] {
         &mut self.0
     }
 }
 impl<F: Float, const N: usize> Displacement<F, N> {
-    pub fn dot(&self, other: &Self) -> F {
+    pub(crate) fn dot(&self, other: &Self) -> F {
         let mut ans = F::zero();
         for i in 0..N {
             ans = ans + self.arr()[i] * other.arr()[i];
@@ -30,20 +30,27 @@ impl<F: Float, const N: usize> Displacement<F, N> {
         ans
     }
 
-    pub fn norm_pow2(&self) -> F {
+    pub(crate) fn norm_pow2(&self) -> F {
         Self::dot(&self, &self)
     }
 
-    pub fn norm(&self) -> F {
+    fn norm(&self) -> F {
         self.norm_pow2().sqrt()
     }
 
-    pub fn unitize(self) -> Self {
+    pub(crate) fn unitize(self) -> Self {
         self / self.norm()
     }
 
-    pub fn reflect(self, n: &Self) -> Self {
-        self - *n * self.dot(n) - *n * self.dot(n)
+    pub(crate) fn reflect(self, n: &Self) -> Self {
+        self - *n * Self::dot(&self, n) - *n * Self::dot(&self, n)
+    }
+
+    pub(crate) fn refract(self, n: &Self, etai_over_etat: F) -> Self {
+        let cos_theta = F::min(Self::dot(&-self, n), F::one());
+        let r_out_perp = (self + *n * cos_theta) * etai_over_etat;
+        let r_out_parallel = *n * -(F::one() - r_out_perp.norm_pow2()).abs().sqrt();
+        r_out_perp + r_out_parallel
     }
 }
 
@@ -98,7 +105,7 @@ impl<F: Float, const N: usize> Mul<F> for Displacement<F, N> {
 }
 
 impl<F: Float, const N: usize> Color<F, N> {
-    pub fn mix(self, other: Self) -> Self {
+    pub(crate) fn mix(self, other: Self) -> Self {
         let mut ans = Self([F::zero(); N]);
         for i in 0..N {
             ans.0[i] = self.0[i] * other.0[i]
