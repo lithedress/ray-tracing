@@ -31,10 +31,10 @@ impl<F: Float, const N: usize> Displacement<F, N> {
     }
 
     pub(crate) fn norm_pow2(&self) -> F {
-        Self::dot(&self, &self)
+        Self::dot(self, self)
     }
 
-    fn norm(&self) -> F {
+    pub(crate) fn norm(&self) -> F {
         self.norm_pow2().sqrt()
     }
 

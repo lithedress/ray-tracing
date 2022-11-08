@@ -1,13 +1,19 @@
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::solid_figures::{Color3, Displacement3, HitRecord3, Position3, Ray3};
+use rand::Rng;
 
 #[derive(Debug)]
 pub(crate) struct Camera {
+    #[allow(dead_code)]
+    w: Displacement3<f64>,
+    u: Displacement3<f64>,
+    v: Displacement3<f64>,
     origin: Position3<f64>,
     lower_left_corner: Position3<f64>,
     horizontal: Displacement3<f64>,
     vertical: Displacement3<f64>,
+    lens_radius: f64,
 }
 
 impl Camera {
@@ -15,8 +21,10 @@ impl Camera {
         look_from: Position3<f64>,
         look_at: Position3<f64>,
         v_up: Displacement3<f64>,
-        v_f_o_f: f64,
+        v_f_o_f: f64, // vertical field-of-view in degrees
         aspect_ratio: f64,
+        aperture: f64,
+        focus_dist: f64,
     ) -> Self {
         let theta = v_f_o_f.to_radians();
         let h = (theta / 2.0).tan();
@@ -28,21 +36,29 @@ impl Camera {
         let v = Displacement3::cross(&w, &u);
 
         let origin = look_from;
-        let horizontal = u * viewport_width;
-        let vertical = v * viewport_height;
-        let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - w;
+        let horizontal = u * viewport_width * focus_dist;
+        let vertical = v * viewport_height * focus_dist;
+        let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - w * focus_dist;
+        let lens_radius = aperture / 2.0;
+
         Self {
+            w,
+            u,
+            v,
             origin,
             horizontal,
             vertical,
             lower_left_corner,
+            lens_radius,
         }
     }
 
     pub(crate) fn get_ray(&self, s: f64, t: f64) -> Ray3<f64> {
+        let rd = Displacement3::new_random_in_unit_disk() * self.lens_radius;
+        let offset = self.u * rd.arr()[0] + self.v * rd.arr()[1];
         Ray3::new(
-            self.origin,
-            self.lower_left_corner + self.horizontal * s + self.vertical * t - self.origin,
+            self.origin + offset,
+            self.lower_left_corner + self.horizontal * s + self.vertical * t - self.origin - offset,
         )
     }
 }
@@ -88,6 +104,19 @@ impl Displacement3<f64> {
             }
             if ans.norm_pow2() < 1.0 {
                 return ans;
+            }
+        }
+    }
+
+    fn new_random_in_unit_disk() -> Self {
+        loop {
+            let p = Self::from_arr([
+                rand::thread_rng().gen_range(-1.0..1.0),
+                rand::thread_rng().gen_range(-1.0..1.0),
+                0.0,
+            ]);
+            if p.norm_pow2() < 1.0 {
+                return p;
             }
         }
     }
@@ -190,12 +219,13 @@ impl Material<f64, 3> for Dielectric {
         let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
 
         let cannot_refract = refraction_ratio * sin_theta > 1.0;
-        let direction =
-            if cannot_refract || Dielectric::reflectance(cos_theta, refraction_ratio) > rand::random() {
-                unit_direction.reflect(&rec.normal)
-            } else {
-                unit_direction.refract(&rec.normal, refraction_ratio)
-            };
+        let direction = if cannot_refract
+            || Dielectric::reflectance(cos_theta, refraction_ratio) > rand::random()
+        {
+            unit_direction.reflect(&rec.normal)
+        } else {
+            unit_direction.refract(&rec.normal, refraction_ratio)
+        };
 
         Some((Ray3::new(rec.p, direction), Color3::from_arr([1.0; 3])))
     }
