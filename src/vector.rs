@@ -60,7 +60,7 @@ impl<F: Float, const N: usize, const P: isize> Add<Displacement<F, N>> for Vecto
     fn add(self, other: Displacement<F, N>) -> Self::Output {
         let mut ans = Self::Output::new();
         for i in 0..N {
-            ans.0[i] = self.0[i] + other.0[i];
+            ans.arr_mut()[i] = self.arr()[i] + other.arr()[i];
         }
         ans
     }
@@ -78,7 +78,7 @@ impl<F: Float, const N: usize, const P: isize> Sub<Displacement<F, N>> for Vecto
     fn sub(self, other: Displacement<F, N>) -> Self::Output {
         let mut ans = Self::Output::new();
         for i in 0..N {
-            ans.0[i] = self.0[i] - other.0[i];
+            ans.arr_mut()[i] = self.arr()[i] - other.arr()[i];
         }
         ans
     }
@@ -90,7 +90,7 @@ impl<F: Float, const N: usize> Sub<Self> for Position<F, N> {
     fn sub(self, other: Self) -> Self::Output {
         let mut ans = Self::Output::new();
         for i in 0..N {
-            ans.0[i] = self.0[i] - other.0[i];
+            ans.arr_mut()[i] = self.arr()[i] - other.arr()[i];
         }
         ans
     }
@@ -108,7 +108,7 @@ impl<F: Float, const N: usize> Color<F, N> {
     pub(crate) fn mix(self, other: Self) -> Self {
         let mut ans = Self([F::zero(); N]);
         for i in 0..N {
-            ans.0[i] = self.0[i] * other.0[i]
+            ans.arr_mut()[i] = self.arr()[i] * other.arr()[i]
         }
         ans
     }
@@ -118,7 +118,7 @@ impl<F: Float, const N: usize> Div<F> for Displacement<F, N> {
     type Output = Self;
 
     fn div(self, other: F) -> Self::Output {
-        Self(self.0.map(|t| t / other))
+        Self(self.arr().map(|t| t / other))
     }
 }
 
@@ -126,6 +126,6 @@ impl<F: Float, const N: usize, const P: isize> Neg for Vector<F, N, P> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Self(self.0.map(F::neg))
+        Self(self.arr().map(F::neg))
     }
 }

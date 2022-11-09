@@ -79,11 +79,7 @@ impl Ray3<f64> {
         } else {
             let u = self.direction.unitize();
             let t = 0.5 * (u.arr()[1] + 1.0);
-            Color3::from_arr([
-                ((1.0 - t) + t * 0.5),
-                ((1.0 - t) + t * 0.7),
-                ((1.0 - t) + t * 1.0),
-            ])
+            Color3::from_arr([1.0, 1.0, 1.0]) * (1.0 - t) + Color3::from_arr([0.5, 0.7, 1.0]) * t
         }
     }
 }
