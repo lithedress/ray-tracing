@@ -10,8 +10,3 @@ Cargo.lock
 **/*.rs.bk
 
 /.idea/
-
-*.bmp
-*.png
-*.jpg
-*.jpeg
